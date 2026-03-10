@@ -1,0 +1,43 @@
+{
+  "name": "react-native-system-speech-output",
+  "version": "1.0.0",
+  "description": "React Native bridge for system text-to-speech on iOS and Android.",
+  "main": "index.js",
+  "react-native": "index.js",
+  "types": "index.d.ts",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abartman/react-native-system-speech-output.git"
+  },
+  "homepage": "https://github.com/abartman/react-native-system-speech-output#readme",
+  "bugs": {
+    "url": "https://github.com/abartman/react-native-system-speech-output/issues"
+  },
+  "keywords": [
+    "react-native",
+    "tts",
+    "text-to-speech",
+    "speech",
+    "ios",
+    "android"
+  ],
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.72"
+  },
+  "files": [
+    "android/",
+    "ios/",
+    "index.js",
+    "index.d.ts",
+    "react-native.config.js",
+    "SystemSpeechOutput.podspec",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

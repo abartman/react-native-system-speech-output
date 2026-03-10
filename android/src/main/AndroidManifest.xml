@@ -1,0 +1,3 @@
+<!-- 3SenseApp/packages/system-speech-output/android/src/main/AndroidManifest.xml -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="ai.threesense.systemspeechoutput" />
