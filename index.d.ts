@@ -3,6 +3,10 @@ export type SpeechOutputState = "idle" | "speaking" | "error" | "unavailable";
 export type SpeakOptions = {
   language?: string | null;
   rate?: number | null;
+  ssml?: string | null;
+  voiceIdentifier?: string | null;
+  preferAssistiveTechnologySettings?: boolean | null;
+  useSystemAudioSession?: boolean | null;
 };
 
 export function isAvailable(): Promise<boolean>;

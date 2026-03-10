@@ -1,8 +1,7 @@
-// 3SenseApp/packages/system-speech-output/index.js
 import { NativeEventEmitter, NativeModules, Platform } from "react-native";
 
 const LINKING_ERROR =
-  `The package '@3sense/system-speech-output' does not seem to be linked. Make sure the app was rebuilt after installing the package.`;
+  `The package 'react-native-system-speech-output' does not seem to be linked. Make sure the app was rebuilt after installing the package.`;
 
 const NativeSystemSpeechOutput = NativeModules.SystemSpeechOutput;
 
@@ -28,6 +27,16 @@ export async function speak(text, options = {}) {
   return getModule().speak(text, {
     language: options.language ?? null,
     rate: typeof options.rate === "number" ? options.rate : null,
+    ssml: typeof options.ssml === "string" ? options.ssml : null,
+    voiceIdentifier: typeof options.voiceIdentifier === "string" ? options.voiceIdentifier : null,
+    preferAssistiveTechnologySettings:
+      typeof options.preferAssistiveTechnologySettings === "boolean"
+        ? options.preferAssistiveTechnologySettings
+        : null,
+    useSystemAudioSession:
+      typeof options.useSystemAudioSession === "boolean"
+        ? options.useSystemAudioSession
+        : null,
   });
 }
 
