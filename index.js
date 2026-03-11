@@ -1,9 +1,8 @@
-import { NativeEventEmitter, NativeModules, Platform } from "react-native";
+import { NativeEventEmitter, Platform } from "react-native";
+import NativeSystemSpeechOutput from "./src/NativeSystemSpeechOutput";
 
 const LINKING_ERROR =
-  `The package 'react-native-system-speech-output' does not seem to be linked. Make sure the app was rebuilt after installing the package.`;
-
-const NativeSystemSpeechOutput = NativeModules.SystemSpeechOutput;
+  `The package '@3senseai/react-native-system-speech-output' does not seem to be linked. Make sure the app was rebuilt after installing the package.`;
 
 const emitter = NativeSystemSpeechOutput
   ? new NativeEventEmitter(NativeSystemSpeechOutput)
@@ -24,7 +23,7 @@ export async function isAvailable() {
 }
 
 export async function listVoices() {
-  if (!NativeSystemSpeechOutput || typeof getModule().listVoices !== "function") {
+  if (!NativeSystemSpeechOutput) {
     return [];
   }
   return getModule().listVoices();
@@ -32,7 +31,7 @@ export async function listVoices() {
 
 export async function speak(text, options = {}) {
   return getModule().speak(text, {
-    language: options.language ?? null,
+    language: typeof options.language === "string" ? options.language : null,
     rate: typeof options.rate === "number" ? options.rate : null,
     pitch: typeof options.pitch === "number" ? options.pitch : null,
     voiceName: typeof options.voiceName === "string" ? options.voiceName : null,

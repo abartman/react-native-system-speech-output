@@ -1,9 +1,12 @@
-// 3SenseApp/packages/system-speech-output/android/build.gradle
 apply plugin: "com.android.library"
 apply plugin: "org.jetbrains.kotlin.android"
 
 static def safeExtGet(rootProject, prop, fallback) {
   return rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+def isNewArchitectureEnabled() {
+  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
 }
 
 android {
@@ -14,10 +17,22 @@ android {
     minSdkVersion safeExtGet(rootProject, "minSdkVersion", 26)
     targetSdkVersion safeExtGet(rootProject, "targetSdkVersion", 36)
     consumerProguardFiles "consumer-rules.pro"
+    buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString())
+  }
+
+  buildFeatures {
+    buildConfig true
   }
 
   sourceSets {
-    main.java.srcDirs += ["src/main/java"]
+    main {
+      java.srcDirs += ["src/main/java"]
+      if (isNewArchitectureEnabled()) {
+        java.srcDirs += ["src/newarch/java"]
+      } else {
+        java.srcDirs += ["src/oldarch/java"]
+      }
+    }
   }
 
   compileOptions {

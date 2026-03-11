@@ -12,8 +12,6 @@ import android.util.Patterns
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableArray
 import com.facebook.react.modules.core.DeviceEventManagerModule
@@ -29,8 +27,12 @@ private data class PendingSpeakRequest(
   val voiceName: String?,
 )
 
-class SystemSpeechOutputModule(private val reactContext: ReactApplicationContext) :
-  ReactContextBaseJavaModule(reactContext), TextToSpeech.OnInitListener {
+class SystemSpeechOutputImpl(private val reactContext: ReactApplicationContext) :
+  TextToSpeech.OnInitListener {
+
+  companion object {
+    const val NAME = "SystemSpeechOutput"
+  }
 
   private val mainHandler = Handler(Looper.getMainLooper())
   private var textToSpeech: TextToSpeech? = null
@@ -39,15 +41,11 @@ class SystemSpeechOutputModule(private val reactContext: ReactApplicationContext
   private val pendingVoiceListPromises = mutableListOf<Promise>()
   private var lastUtteranceId: String? = null
 
-  override fun getName(): String = "SystemSpeechOutput"
-
-  override fun initialize() {
-    super.initialize()
+  fun initialize() {
     ensureTextToSpeech()
   }
 
-  override fun invalidate() {
-    super.invalidate()
+  fun invalidate() {
     stopInternal()
     textToSpeech?.shutdown()
     textToSpeech = null
@@ -98,17 +96,14 @@ class SystemSpeechOutputModule(private val reactContext: ReactApplicationContext
     }
   }
 
-  @ReactMethod
   fun addListener(eventName: String?) {
     // Required by NativeEventEmitter on newer React Native versions.
   }
 
-  @ReactMethod
   fun removeListeners(count: Double) {
     // Required by NativeEventEmitter on newer React Native versions.
   }
 
-  @ReactMethod
   fun isAvailable(promise: Promise) {
     if (textToSpeech != null) {
       promise.resolve(true)
@@ -123,7 +118,6 @@ class SystemSpeechOutputModule(private val reactContext: ReactApplicationContext
     }
   }
 
-  @ReactMethod
   fun listVoices(promise: Promise) {
     ensureTextToSpeech()
     if (!initialized) {
@@ -133,7 +127,6 @@ class SystemSpeechOutputModule(private val reactContext: ReactApplicationContext
     promise.resolve(createVoicesArray(textToSpeech?.voices))
   }
 
-  @ReactMethod
   fun speak(text: String, options: ReadableMap?, promise: Promise) {
     ensureTextToSpeech()
     val language = options?.takeIf { it.hasKey("language") && !it.isNull("language") }?.getString("language")
@@ -163,7 +156,6 @@ class SystemSpeechOutputModule(private val reactContext: ReactApplicationContext
     promise.resolve(true)
   }
 
-  @ReactMethod
   fun stop(promise: Promise) {
     stopInternal()
     promise.resolve(true)
@@ -185,10 +177,9 @@ class SystemSpeechOutputModule(private val reactContext: ReactApplicationContext
     if (pendingVoiceListPromises.isEmpty()) {
       return
     }
-    val payload = if (initialized) createVoicesArray(textToSpeech?.voices) else Arguments.createArray()
     val promises = pendingVoiceListPromises.toList()
     pendingVoiceListPromises.clear()
-    promises.forEach { it.resolve(payload) }
+    promises.forEach { it.resolve(createVoicesArray(textToSpeech?.voices)) }
   }
 
   private fun speakInternal(

@@ -9,7 +9,7 @@
 
 @implementation SystemSpeechOutput
 
-RCT_EXPORT_MODULE();
+RCT_EXPORT_MODULE(SystemSpeechOutput);
 
 + (BOOL)requiresMainQueueSetup
 {
@@ -50,12 +50,17 @@ RCT_EXPORT_METHOD(removeListeners:(double)count)
   // Required by NativeEventEmitter on newer React Native versions.
 }
 
-RCT_EXPORT_METHOD(isAvailable:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(isAvailable:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
   resolve(@(YES));
 }
 
-RCT_EXPORT_METHOD(speak:(NSString *)text options:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(listVoices:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+  resolve([self serializedVoices:[AVSpeechSynthesisVoice speechVoices]]);
+}
+
+RCT_EXPORT_METHOD(speak:(NSString *)text options:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self.synthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
@@ -75,13 +80,31 @@ RCT_EXPORT_METHOD(speak:(NSString *)text options:(NSDictionary *)options resolve
   });
 }
 
-RCT_EXPORT_METHOD(stop:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(stop:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self.synthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
     [self emitState:@"idle"];
     resolve(@(YES));
   });
+}
+
+- (NSArray<NSDictionary *> *)serializedVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices
+{
+  NSMutableArray<NSDictionary *> *results = [NSMutableArray new];
+
+  for (AVSpeechSynthesisVoice *voice in voices) {
+    NSMutableDictionary *entry = [NSMutableDictionary new];
+    entry[@"name"] = voice.identifier ?: voice.name ?: voice.language ?: @"";
+    if (voice.language.length > 0) {
+      entry[@"locale"] = [self normalizedLanguageCode:voice.language];
+    }
+    entry[@"quality"] = @((NSInteger)voice.quality);
+    entry[@"features"] = @[];
+    [results addObject:entry];
+  }
+
+  return results;
 }
 
 - (AVSpeechUtterance *)buildUtteranceForText:(NSString *)text options:(NSDictionary *)options
@@ -229,5 +252,13 @@ RCT_EXPORT_METHOD(stop:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejec
   }
   [self sendEventWithName:@"SystemSpeechOutputState" body:@{ @"state": state ?: @"idle" }];
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+  (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+  return std::make_shared<facebook::react::NativeSystemSpeechOutputSpecJSI>(params);
+}
+#endif
 
 @end
