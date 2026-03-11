@@ -1,6 +1,6 @@
 {
-  "name": "react-native-system-speech-output",
-  "version": "1.0.0",
+  "name": "@3senseai/react-native-system-speech-output",
+  "version": "0.1.0",
   "description": "React Native bridge for system text-to-speech on iOS and Android.",
   "main": "index.js",
   "react-native": "index.js",

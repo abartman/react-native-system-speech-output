@@ -23,10 +23,19 @@ export async function isAvailable() {
   return getModule().isAvailable();
 }
 
+export async function listVoices() {
+  if (!NativeSystemSpeechOutput || typeof getModule().listVoices !== "function") {
+    return [];
+  }
+  return getModule().listVoices();
+}
+
 export async function speak(text, options = {}) {
   return getModule().speak(text, {
     language: options.language ?? null,
     rate: typeof options.rate === "number" ? options.rate : null,
+    pitch: typeof options.pitch === "number" ? options.pitch : null,
+    voiceName: typeof options.voiceName === "string" ? options.voiceName : null,
     ssml: typeof options.ssml === "string" ? options.ssml : null,
     voiceIdentifier: typeof options.voiceIdentifier === "string" ? options.voiceIdentifier : null,
     preferAssistiveTechnologySettings:
@@ -65,6 +74,7 @@ export const platformInfo = {
 
 export default {
   isAvailable,
+  listVoices,
   speak,
   stop,
   addStateListener,

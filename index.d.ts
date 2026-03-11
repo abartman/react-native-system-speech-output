@@ -3,13 +3,25 @@ export type SpeechOutputState = "idle" | "speaking" | "error" | "unavailable";
 export type SpeakOptions = {
   language?: string | null;
   rate?: number | null;
+  pitch?: number | null;
+  voiceName?: string | null;
   ssml?: string | null;
   voiceIdentifier?: string | null;
   preferAssistiveTechnologySettings?: boolean | null;
   useSystemAudioSession?: boolean | null;
 };
 
+export type VoiceInfo = {
+  name: string;
+  locale?: string | null;
+  quality?: number;
+  latency?: number;
+  networkRequired?: boolean;
+  features?: string[];
+};
+
 export function isAvailable(): Promise<boolean>;
+export function listVoices(): Promise<VoiceInfo[]>;
 export function speak(text: string, options?: SpeakOptions): Promise<boolean>;
 export function stop(): Promise<boolean>;
 export function addStateListener(
@@ -18,6 +30,7 @@ export function addStateListener(
 
 declare const _default: {
   isAvailable: typeof isAvailable;
+  listVoices: typeof listVoices;
   speak: typeof speak;
   stop: typeof stop;
   addStateListener: typeof addStateListener;

@@ -1,4 +1,4 @@
-# react-native-system-speech-output
+# @3senseai/react-native-system-speech-output
 
 React Native bridge for system text-to-speech on iOS and Android.
 
@@ -6,11 +6,14 @@ React Native bridge for system text-to-speech on iOS and Android.
 
 - Speak plain text on iOS and Android
 - iOS support for SSML on iOS 16+
-- Optional `voiceIdentifier` for explicit voice selection
-- Optional `language` and `rate`
-- Optional `preferAssistiveTechnologySettings` for better VoiceOver compatibility
-- Optional `useSystemAudioSession` to let the system manage speech audio behavior
-- Speech state listener for `idle` / `speaking`
+- iOS support for `voiceIdentifier`
+- iOS support for `preferAssistiveTechnologySettings`
+- iOS support for `useSystemAudioSession`
+- Android support for `pitch`
+- Android support for `voiceName`
+- Android support for `listVoices()`
+- Android speech annotations for phones, emails, and URLs
+- Speech state listener for `idle` / `speaking` / `error`
 
 ## Install from GitHub
 
@@ -19,9 +22,7 @@ React Native bridge for system text-to-speech on iOS and Android.
 
 ## Install from npm
 
-Use this after the package is published:
-
-    npm install react-native-system-speech-output
+    npm install @3senseai/react-native-system-speech-output
     cd ios && pod install && cd ..
 
 ## Rebuild required
@@ -30,7 +31,7 @@ Because this package contains native iOS and Android code, rebuild the app after
 
 ## Usage
 
-    import SpeechOutput from "react-native-system-speech-output";
+    import SpeechOutput from "@3senseai/react-native-system-speech-output";
 
     const available = await SpeechOutput.isAvailable();
 
@@ -47,6 +48,10 @@ Because this package contains native iOS and Android code, rebuild the app after
 
 Returns whether the native speech bridge is available.
 
+### `listVoices(): Promise<VoiceInfo[]>`
+
+Returns available voices, mainly useful on Android for explicit voice selection.
+
 ### `speak(text, options?): Promise<boolean>`
 
 Speaks the provided text.
@@ -56,10 +61,12 @@ Supported options:
     type SpeakOptions = {
       language?: string | null;
       rate?: number | null;
-      ssml?: string | null;
-      voiceIdentifier?: string | null;
-      preferAssistiveTechnologySettings?: boolean | null;
-      useSystemAudioSession?: boolean | null;
+      pitch?: number | null; // Android
+      voiceName?: string | null; // Android
+      ssml?: string | null; // iOS
+      voiceIdentifier?: string | null; // iOS
+      preferAssistiveTechnologySettings?: boolean | null; // iOS
+      useSystemAudioSession?: boolean | null; // iOS
     };
 
 ### `stop(): Promise<boolean>`
@@ -85,11 +92,24 @@ Subscribes to speech state updates.
       ssml: "<speak>Hello<break time=\"300ms\"/>world.</speak>",
     });
 
-### Explicit voice selection
+### iOS explicit voice selection
 
     await SpeechOutput.speak("Good morning", {
       voiceIdentifier: "com.apple.voice.compact.en-AU.Karen",
     });
+
+### Android pitch and voice selection
+
+    await SpeechOutput.speak("Good morning", {
+      language: "en-AU",
+      pitch: 1.05,
+      voiceName: "en-au-x-aud-network",
+    });
+
+### Android voice listing
+
+    const voices = await SpeechOutput.listVoices();
+    console.log(voices);
 
 ### State listener
 
@@ -111,7 +131,9 @@ Subscribes to speech state updates.
 ### Android
 
 - Plain text speech is supported
-- Extra iOS-specific options are ignored safely by Android
+- `pitch`, `voiceName`, and `listVoices()` are supported
+- Phone numbers, email addresses, and URLs are annotated for better pronunciation
+- iOS-specific options are ignored safely by Android
 
 ## Notes
 
