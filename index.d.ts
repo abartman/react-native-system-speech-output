@@ -1,5 +1,11 @@
 export type SpeechOutputState = "idle" | "speaking" | "error" | "unavailable";
 
+export type SpeechProgressEvent = {
+  utteranceId: string;
+  start: number;
+  end: number;
+};
+
 export type SpeakOptions = {
   language?: string | null;
   rate?: number | null;
@@ -27,6 +33,9 @@ export function stop(): Promise<boolean>;
 export function addStateListener(
   listener: (event: { state?: SpeechOutputState }) => void,
 ): { remove(): void };
+export function addProgressListener(
+  listener: (event: SpeechProgressEvent) => void,
+): { remove(): void };
 
 declare const _default: {
   isAvailable: typeof isAvailable;
@@ -34,6 +43,7 @@ declare const _default: {
   speak: typeof speak;
   stop: typeof stop;
   addStateListener: typeof addStateListener;
+  addProgressListener: typeof addProgressListener;
   platformInfo: { platform: string };
 };
 

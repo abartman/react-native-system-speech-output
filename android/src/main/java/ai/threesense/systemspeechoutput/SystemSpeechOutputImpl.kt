@@ -67,6 +67,12 @@ class SystemSpeechOutputImpl(private val reactContext: ReactApplicationContext) 
         emitState("speaking")
       }
 
+      override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
+        if (utteranceId != null) {
+          emitProgress(utteranceId, start, end)
+        }
+      }
+
       override fun onDone(utteranceId: String?) {
         if (utteranceId != null && utteranceId == lastUtteranceId) {
           lastUtteranceId = null
@@ -362,5 +368,16 @@ class SystemSpeechOutputImpl(private val reactContext: ReactApplicationContext) 
     reactContext
       .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
       .emit("SystemSpeechOutputState", payload)
+  }
+
+  private fun emitProgress(utteranceId: String, start: Int, end: Int) {
+    val payload = Arguments.createMap().apply {
+      putString("utteranceId", utteranceId)
+      putInt("start", start)
+      putInt("end", end)
+    }
+    reactContext
+      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+      .emit("SystemSpeechOutputProgress", payload)
   }
 }

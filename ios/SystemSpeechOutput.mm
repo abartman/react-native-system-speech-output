@@ -4,6 +4,7 @@
 
 @interface SystemSpeechOutput() <AVSpeechSynthesizerDelegate>
 @property (nonatomic, strong) AVSpeechSynthesizer *synthesizer;
+@property (nonatomic, strong) NSMapTable<AVSpeechUtterance *, NSString *> *utteranceIds;
 @property (nonatomic, assign) BOOL hasListeners;
 @end
 
@@ -21,13 +22,14 @@ RCT_EXPORT_MODULE(SystemSpeechOutput);
   if ((self = [super init])) {
     _synthesizer = [AVSpeechSynthesizer new];
     _synthesizer.delegate = self;
+    _utteranceIds = [NSMapTable strongToStrongObjectsMapTable];
   }
   return self;
 }
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[@"SystemSpeechOutputState"];
+  return @[@"SystemSpeechOutputState", @"SystemSpeechOutputProgress"];
 }
 
 - (void)startObserving
@@ -64,6 +66,7 @@ RCT_EXPORT_METHOD(speak:(NSString *)text options:(NSDictionary *)options resolve
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self.synthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
+    [self.utteranceIds removeAllObjects];
 
     NSDictionary *safeOptions = [options isKindOfClass:[NSDictionary class]] ? options : @{};
     [self configureSynthesizerForOptions:safeOptions];
@@ -73,6 +76,9 @@ RCT_EXPORT_METHOD(speak:(NSString *)text options:(NSDictionary *)options resolve
       reject(@"speech_output_unavailable", @"Unable to create speech utterance.", nil);
       return;
     }
+
+    NSString *utteranceId = [[NSUUID UUID] UUIDString];
+    [self.utteranceIds setObject:utteranceId forKey:utterance];
 
     [self.synthesizer speakUtterance:utterance];
     [self emitState:@"speaking"];
@@ -84,6 +90,7 @@ RCT_EXPORT_METHOD(stop:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectB
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self.synthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
+    [self.utteranceIds removeAllObjects];
     [self emitState:@"idle"];
     resolve(@(YES));
   });
@@ -230,13 +237,58 @@ RCT_EXPORT_METHOD(stop:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectB
   return trimmed.lowercaseString;
 }
 
+- (NSString *)utteranceIdForUtterance:(AVSpeechUtterance *)utterance
+{
+  if (utterance == nil) {
+    return nil;
+  }
+  return [self.utteranceIds objectForKey:utterance];
+}
+
+- (void)clearTrackingForUtterance:(AVSpeechUtterance *)utterance
+{
+  if (utterance == nil) {
+    return;
+  }
+  [self.utteranceIds removeObjectForKey:utterance];
+}
+
+- (void)emitProgressForRange:(NSRange)characterRange utterance:(AVSpeechUtterance *)utterance
+{
+  if (!self.hasListeners) {
+    return;
+  }
+
+  NSString *utteranceId = [self utteranceIdForUtterance:utterance];
+  if (utteranceId.length == 0) {
+    return;
+  }
+
+  NSUInteger start = characterRange.location;
+  NSUInteger end = NSMaxRange(characterRange);
+
+  [self sendEventWithName:@"SystemSpeechOutputProgress"
+                     body:@{
+                       @"utteranceId": utteranceId,
+                       @"start": @(start),
+                       @"end": @(end),
+                     }];
+}
+
+- (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer willSpeakRangeOfSpeechString:(NSRange)characterRange utterance:(AVSpeechUtterance *)utterance
+{
+  [self emitProgressForRange:characterRange utterance:utterance];
+}
+
 - (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didFinishSpeechUtterance:(AVSpeechUtterance *)utterance
 {
+  [self clearTrackingForUtterance:utterance];
   [self emitState:@"idle"];
 }
 
 - (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didCancelSpeechUtterance:(AVSpeechUtterance *)utterance
 {
+  [self clearTrackingForUtterance:utterance];
   [self emitState:@"idle"];
 }
 

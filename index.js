@@ -4,6 +4,9 @@ import NativeSystemSpeechOutput from "./src/NativeSystemSpeechOutput";
 const LINKING_ERROR =
   `The package '@3senseai/react-native-system-speech-output' does not seem to be linked. Make sure the app was rebuilt after installing the package.`;
 
+const STATE_EVENT_NAME = "SystemSpeechOutputState";
+const PROGRESS_EVENT_NAME = "SystemSpeechOutputProgress";
+
 const emitter = NativeSystemSpeechOutput
   ? new NativeEventEmitter(NativeSystemSpeechOutput)
   : null;
@@ -59,7 +62,19 @@ export function addStateListener(listener) {
   if (!emitter) {
     return { remove() {} };
   }
-  const sub = emitter.addListener("SystemSpeechOutputState", listener);
+  const sub = emitter.addListener(STATE_EVENT_NAME, listener);
+  return {
+    remove() {
+      sub.remove();
+    },
+  };
+}
+
+export function addProgressListener(listener) {
+  if (!emitter) {
+    return { remove() {} };
+  }
+  const sub = emitter.addListener(PROGRESS_EVENT_NAME, listener);
   return {
     remove() {
       sub.remove();
@@ -77,5 +92,6 @@ export default {
   speak,
   stop,
   addStateListener,
+  addProgressListener,
   platformInfo,
 };
